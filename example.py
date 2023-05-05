@@ -5,14 +5,14 @@ job_names = [f"job_{i}" for i in range(10)]
 for name in job_names:
     @pygpao.job(
         name=name,
-        project="test",
+        project="demo",
     )
     def print_yes():
         print('yes')
 
 @pygpao.job(
     name="main",
-    project="test",
+    project="demo",
     deps=job_names,
 )
 def main():
