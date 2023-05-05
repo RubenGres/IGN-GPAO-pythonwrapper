@@ -1,27 +1,21 @@
 import pygpao
 
-import time
-import os
+job_names = [f"job_{i}" for i in range(10)]
 
-os.chdir('/Volumes/ESPACE_TRAVAIL_Puma/DANI/RUBEN/rgres_scripts/pygpao/')
-
-@pygpao.job()
-def readme():
-    file = open("test_fic", "w")
-    file.write(f"Il est {time.time()}")
-    file.close()
-
-for i in range(3):
+for name in job_names:
     @pygpao.job(
-        job=f"job_name_{i}",
-        project="test_project",
-        args={
-            'filename' : f"'mon_fic_{i}'"
-        }
+        name=name,
+        project="test",
     )
-    def save_date(filename):
-        file = open(filename, "w")
-        file.write(f"Il est {time.time()}")
-        file.close()
+    def print_yes():
+        print('yes')
+
+@pygpao.job(
+    name="main",
+    project="test",
+    deps=job_names,
+)
+def main():
+    print('I think I am becoming dependant...')
 
 pygpao.send_jobs(api="http://172.24.1.44:8080")

@@ -16,10 +16,11 @@ def job(**kwargs):
     session_path = os.path.abspath(PYTHON_KERNEL_PATH)
 
     def decorator(func):
-        job = kwargs.get("job", f"{func.__name__}_job")
+        name = kwargs.get("name", f"{func.__name__}")
         project = kwargs.get("project", os.path.basename(sys.argv[0]))
         tags = kwargs.get("tags", None)
         args = kwargs.get("args", {})
+        deps = kwargs.get("deps", None)
         
         formatted_args = ', '.join(f'{k}={v}' for k, v in args.items())
 
@@ -28,9 +29,13 @@ def job(**kwargs):
         cmd = cmd.replace('"', '\\"')
         cmd = f'bash -c "cd {os.getcwd()} && {cmd}"'
 
-        job1 = Job(job, cmd, tags=tags)
+        if deps:
+            job_deps = [JOBS[project][dep] for dep in deps]
+        else:
+            job_deps = None
 
-        JOBS.setdefault(project, []).append(job1)
+        job = Job(name, cmd, tags=tags, deps=job_deps)
+        JOBS.setdefault(project, {})[name] = job
 
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
@@ -48,7 +53,7 @@ def send_jobs(api, projects_names=None):
 
     projects = []
     for name in projects_names:
-        project = Project(name, JOBS[name])
+        project = Project(name, list(JOBS[name].values()))
         projects.append(project)
 
     builder = Builder(projects)
